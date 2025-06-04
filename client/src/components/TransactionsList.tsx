@@ -49,19 +49,8 @@ export default function TransactionsList({ onEditTransaction }: TransactionsList
     }
   };
 
-  const { data: transactions = [], isLoading } = useQuery({
+  const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions", dateRange, typeFilter],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      const range = getDateRange();
-      if (range.startDate) params.append('startDate', range.startDate);
-      if (range.endDate) params.append('endDate', range.endDate);
-      if (typeFilter !== 'all') params.append('type', typeFilter);
-      
-      return fetch(`/api/transactions?${params.toString()}`, {
-        credentials: 'include',
-      }).then(res => res.json());
-    },
   });
 
   const deleteMutation = useMutation({
@@ -90,13 +79,13 @@ export default function TransactionsList({ onEditTransaction }: TransactionsList
   };
 
   // Filter transactions by category on frontend
-  const filteredTransactions = transactions.filter((transaction: Transaction) => {
+  const filteredTransactions = Array.isArray(transactions) ? transactions.filter((transaction: Transaction) => {
     if (categoryFilter === 'all') return true;
     return transaction.category === categoryFilter;
-  });
+  }) : [];
 
   // Get unique categories for filter
-  const categories = Array.from(new Set(transactions.map((t: Transaction) => t.category)));
+  const categories = Array.isArray(transactions) ? Array.from(new Set(transactions.map((t: Transaction) => t.category))) : [];
 
   if (isLoading) {
     return (
